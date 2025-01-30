@@ -1,6 +1,0 @@
-version: "Apple Swift version 5.7.2 (swiftlang-5.7.2.135.5 clang-1400.0.29.51)"
-options: "4386d9ff2342852b13b681b6662cc3a50fa4a505bdac50987690038f7d82335d"
-build_start_time: [1737365627, 101330995]
-build_end_time: [1737365627, 174204826]
-inputs:
-  "/Users/mac/.pub-cache/hosted/pub.dev/app_links-6.3.3/macos/Classes/AppLinksMacosPlugin.swift": !private [1734082256, 408397436]
