@@ -1,0 +1,8 @@
+# Ignore build directories
+/build/
+/.dart_tool/
+
+# Ignore Flutter generated files
+**/*.apk
+**/*.app
+**/*.dill

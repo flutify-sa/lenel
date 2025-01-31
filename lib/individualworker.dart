@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -92,7 +92,7 @@ class IndividualWorkerState extends State<IndividualWorker> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       color: Colors.white,
-                      shadowColor: Colors.grey.withValues(),
+                      shadowColor: Colors.grey.withOpacity(0.5),
                       margin: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -146,7 +146,7 @@ class IndividualWorkerState extends State<IndividualWorker> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       color: Colors.white,
-                      shadowColor: Colors.grey.withValues(),
+                      shadowColor: Colors.grey.withOpacity(0.5),
                       margin: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),

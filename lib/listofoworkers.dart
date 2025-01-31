@@ -148,6 +148,14 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
           style: TextStyle(color: Color(0xffe6cf8c)),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh, color: Color(0xffe6cf8c)), // Refresh icon
+            onPressed: () {
+              _fetchWorkers(); // Call the fetch method when pressed
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
