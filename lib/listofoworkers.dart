@@ -26,15 +26,11 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
   List<Map<String, dynamic>> _workers = [];
 
   Future<void> _fetchWorkers() async {
-    try {
-      final response =
-          await _supabase.from('workers').select('name, surname, pin');
-      setState(() {
-        _workers = List<Map<String, dynamic>>.from(response);
-      });
-    } catch (e) {
-      print('Error fetching workers: $e');
-    }
+    final response =
+        await _supabase.from('workers').select('name, surname, pin');
+    setState(() {
+      _workers = List<Map<String, dynamic>>.from(response);
+    });
   }
 
   // Function to handle form submission and insert data into Supabase
@@ -104,11 +100,10 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
                 Navigator.of(context).pop(); // Close the dialog
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[900], // Set the background color
-                foregroundColor: Colors.white, // Set the text color
+                backgroundColor: Colors.grey[900],
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(8), // Set the border radius
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
               child: Text('Cancel'),
@@ -116,14 +111,45 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
             ElevatedButton(
               onPressed: _handleSubmit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[900], // Set the background color
-                foregroundColor: Colors.white, // Set the text color
+                backgroundColor: Colors.grey[900],
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(8), // Set the border radius
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
               child: Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteWorker(String pin) async {
+    await _supabase.from('workers').delete().eq('pin', pin);
+    _fetchWorkers(); // Refresh the list after deletion
+  }
+
+  void _showDeleteConfirmation(String pin) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Worker'),
+          content: Text('Are you sure you want to delete this worker?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                _deleteWorker(pin);
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Delete'),
             ),
           ],
         );
@@ -150,7 +176,7 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh, color: Color(0xffe6cf8c)), // Refresh icon
+            icon: Icon(Icons.refresh, color: Color(0xffe6cf8c)),
             onPressed: () {
               _fetchWorkers(); // Call the fetch method when pressed
             },
@@ -164,17 +190,15 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
             ElevatedButton(
               onPressed: _showFormDialog,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[900], // Set the background color
-                foregroundColor: Colors.white, // Set the text color
+                backgroundColor: Colors.grey[900],
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(8), // Set the border radius
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
               child: Text('Add Worker'),
             ),
-            SizedBox(height: 20), // Space between button and list
-            // Container with yellow background and list of workers
+            SizedBox(height: 20),
             Expanded(
               child: Container(
                 color: Colors.yellow.shade50,
@@ -186,19 +210,23 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
                         itemBuilder: (context, index) {
                           final worker = _workers[index];
                           return Container(
-                            margin: EdgeInsets.only(
-                                bottom: 8.0), // Add margin between tiles
+                            margin: EdgeInsets.only(bottom: 8.0),
                             decoration: BoxDecoration(
-                              color: Colors.blue.shade50, // Background color
-                              borderRadius:
-                                  BorderRadius.circular(8.0), // Border radius
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(8.0),
                             ),
                             child: ListTile(
                               title: Text(
                                   '${worker['name']} ${worker['surname']}'),
                               subtitle: Text('Pin: ${worker['pin']}'),
+                              trailing: IconButton(
+                                icon: Icon(Icons.delete, color: Colors.red),
+                                onPressed: () {
+                                  _showDeleteConfirmation(
+                                      worker['pin'].toString());
+                                },
+                              ),
                               onTap: () {
-                                // Navigate to IndividualWorker page
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(

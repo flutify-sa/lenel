@@ -163,7 +163,7 @@ class IndividualWorkerState extends State<IndividualWorker> {
                               ),
                               SizedBox(height: 8),
                               Text(
-                                'Acceptance:\n ${_workerDetails!['acceptance']}',
+                                'Accepted Contract, Policies and Procedures:\n ${_workerDetails!['acceptance']}',
                                 style: TextStyle(fontSize: 18),
                               ),
                               SizedBox(height: 8),
@@ -181,7 +181,7 @@ class IndividualWorkerState extends State<IndividualWorker> {
                   Column(
                     children: [
                       // Top Card
-                      Container(
+                      SizedBox(
                         height: 150, // Adjust the height as needed
                         child: Card(
                           elevation: 5,
