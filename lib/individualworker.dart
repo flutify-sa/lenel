@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print, deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Import the intl package for date formatting
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class IndividualWorker extends StatefulWidget {
@@ -163,7 +164,8 @@ class IndividualWorkerState extends State<IndividualWorker> {
                               ),
                               SizedBox(height: 8),
                               Text(
-                                'Accepted Contract, Policies and Procedures:\n ${_workerDetails!['acceptance']}',
+                                // Change from acceptance to Date / Time
+                                'Accepted Contract, Policies and Procedures:\n ${_formatAcceptanceDate(_workerDetails!['acceptance'])}',
                                 style: TextStyle(fontSize: 18),
                               ),
                               SizedBox(height: 8),
@@ -250,5 +252,11 @@ class IndividualWorkerState extends State<IndividualWorker> {
               ),
             ),
     );
+  }
+
+  String _formatAcceptanceDate(String timestamp) {
+    DateTime dateTime = DateTime.parse(timestamp); // Convert to DateTime
+    return DateFormat('yyyy-MM-dd HH:mm')
+        .format(dateTime); // Format as 'YYYY-MM-DD HH:MM'
   }
 }
