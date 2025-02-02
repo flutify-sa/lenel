@@ -169,7 +169,7 @@ class _LocationsState extends State<Locations> {
                     child: Text(
                       'NO LOCATIONS FOUND',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey[600],
                       ),

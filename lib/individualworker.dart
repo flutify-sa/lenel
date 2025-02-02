@@ -1,8 +1,9 @@
-// ignore_for_file: avoid_print, deprecated_member_use
+// ignore_for_file: avoid_print, deprecated_member_use, unused_import
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Import the intl package for date formatting
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class IndividualWorker extends StatefulWidget {
   final String pin;
@@ -22,7 +23,8 @@ class IndividualWorkerState extends State<IndividualWorker> {
   void initState() {
     super.initState();
     _fetchWorkerDetails();
-    _fetchAdditionalDetails(); // Fetch additional details from workers table
+    _fetchAdditionalDetails();
+    _fetchDocuments(); // Fetch additional details from workers table
   }
 
   Future<void> _fetchWorkerDetails() async {
@@ -62,6 +64,34 @@ class IndividualWorkerState extends State<IndividualWorker> {
     }
   }
 
+// Define a list to store document URLs
+  List<String> _documentUrls = [];
+
+  Future<void> _fetchDocuments() async {
+    try {
+      final storagePath = 'uploads/${widget.pin}';
+      final response =
+          await _supabase.storage.from('profiles').list(path: storagePath);
+
+      // Extract and generate URLs
+      final documents = response.map((item) => item.name).toList();
+      List<String> urls = [];
+
+      for (var fileName in documents) {
+        final publicUrl = _supabase.storage
+            .from('profiles')
+            .getPublicUrl('$storagePath/$fileName');
+        urls.add(publicUrl);
+      }
+
+      setState(() {
+        _documentUrls = urls;
+      });
+    } catch (e) {
+      print('Error fetching documents: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,6 +104,7 @@ class IndividualWorkerState extends State<IndividualWorker> {
               // Call the methods to refresh data
               _fetchWorkerDetails();
               _fetchAdditionalDetails();
+              _fetchDocuments();
             },
           ),
         ],
@@ -88,92 +119,96 @@ class IndividualWorkerState extends State<IndividualWorker> {
                 children: [
                   Expanded(
                     child: SingleChildScrollView(
-                      child: Card(
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        color: Colors.white,
-                        shadowColor: Colors.grey.withOpacity(0.5),
-                        margin:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Name: ${_workerDetails!['name']} ${_workerDetails!['surname']}',
-                                style: TextStyle(
-                                    fontSize: 24, fontWeight: FontWeight.bold),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Mobile Number: ${_workerDetails!['mobile_number']}',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Address: ${_workerDetails!['address']}',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Bank Details: ${_workerDetails!['bank_details']}',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Spouse: ${_workerDetails!['next_of_kin']}',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'ID No.: ${_workerDetails!['said']}',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Pin: ${_workerDetails!['workerpin']}',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Children Names: ${_workerDetails!['children_names']}',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Parent Details: ${_workerDetails!['parent_details']}',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Immediate Family: ${_workerDetails!['immediatefamily']}',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Father-in-Law: ${_workerDetails!['father_in_law']}',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Mother-in-Law: ${_workerDetails!['mother_in_law']}',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                // Change from acceptance to Date / Time
-                                'Accepted Contract, Policies and Procedures:\n ${_formatAcceptanceDate(_workerDetails!['acceptance'])}',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Race/Gender: ${_workerDetails!['racegender'] ?? 'Not specified'}',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                            ],
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: 300),
+                        child: Card(
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          color: Colors.white,
+                          shadowColor: Colors.grey.withOpacity(0.5),
+                          margin:
+                              EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Name: ${_workerDetails!['name']} ${_workerDetails!['surname']}',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Mobile Number: ${_workerDetails!['mobile_number']}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Address: ${_workerDetails!['address']}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Bank Details: ${_workerDetails!['bank_details']}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Spouse: ${_workerDetails!['next_of_kin']}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'ID No.: ${_workerDetails!['said']}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Pin: ${_workerDetails!['workerpin']}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Children Names: ${_workerDetails!['children_names']}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Parent Details: ${_workerDetails!['parent_details']}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Immediate Family: ${_workerDetails!['immediatefamily']}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Father-in-Law: ${_workerDetails!['father_in_law']}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Mother-in-Law: ${_workerDetails!['mother_in_law']}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  // Change from acceptance to Date / Time
+                                  'Accepted Contract, Policies and Procedures:\n ${_formatAcceptanceDate(_workerDetails!['acceptance'])}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Race/Gender: ${_workerDetails!['racegender'] ?? 'Not specified'}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -201,17 +236,17 @@ class IndividualWorkerState extends State<IndividualWorker> {
                               children: [
                                 Text(
                                   'Location: ${_additionalDetails!['location']}',
-                                  style: TextStyle(fontSize: 18),
+                                  style: TextStyle(fontSize: 16),
                                 ),
                                 SizedBox(height: 8),
                                 Text(
                                   'Hourly Rate: R${_additionalDetails!['hourly_rate']}',
-                                  style: TextStyle(fontSize: 18),
+                                  style: TextStyle(fontSize: 16),
                                 ),
                                 SizedBox(height: 8),
                                 Text(
                                   'Project: ${_additionalDetails!['project']}',
-                                  style: TextStyle(fontSize: 18),
+                                  style: TextStyle(fontSize: 16),
                                 ),
                               ],
                             ),
@@ -223,26 +258,75 @@ class IndividualWorkerState extends State<IndividualWorker> {
                       SizedBox(height: 16),
 
                       // Bottom Card (currently blank)
-                      Card(
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        color: Colors.white,
-                        shadowColor: Colors.grey.withOpacity(0.5),
-                        margin:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Currently blank, you can add content here later
-                              Text(
-                                'In here will appear all the docs that have been uploaded',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                            ],
+                      SingleChildScrollView(
+                        child: Card(
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          color: Colors.white,
+                          shadowColor: Colors.grey.withOpacity(0.5),
+                          margin:
+                              EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Uploaded Documents:',
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(height: 8),
+                                _documentUrls.isEmpty
+                                    ? Text(
+                                        'No documents found.',
+                                        style: TextStyle(fontSize: 14),
+                                      )
+                                    : Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: _documentUrls.map((url) {
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 8.0),
+                                            child: Image.network(
+                                              url,
+                                              width: 400,
+                                              //  height: 150,
+                                              fit: BoxFit.cover,
+                                              loadingBuilder: (context, child,
+                                                  loadingProgress) {
+                                                if (loadingProgress == null) {
+                                                  return child;
+                                                }
+                                                return Center(
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    value: loadingProgress
+                                                                .expectedTotalBytes !=
+                                                            null
+                                                        ? loadingProgress
+                                                                .cumulativeBytesLoaded /
+                                                            loadingProgress
+                                                                .expectedTotalBytes!
+                                                        : null,
+                                                  ),
+                                                );
+                                              },
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                return Icon(Icons.error,
+                                                    color: Colors.red);
+                                              },
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

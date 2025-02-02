@@ -147,11 +147,11 @@ class _SpecificWorkerState extends State<SpecificWorker> {
                   children: [
                     TextSpan(
                       text: 'Location: ',
-                      style: TextStyle(color: Color(0xffe6cf8c), fontSize: 18),
+                      style: TextStyle(color: Color(0xffe6cf8c), fontSize: 16),
                     ),
                     TextSpan(
                       text: selectedCode!,
-                      style: TextStyle(color: Colors.white, fontSize: 18),
+                      style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ],
                 ),
