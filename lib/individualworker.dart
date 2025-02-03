@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Import the intl package for date formatting
+import 'package:sincotdashboard/contract_text_widget.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class IndividualWorker extends StatefulWidget {
@@ -111,6 +112,7 @@ class IndividualWorkerState extends State<IndividualWorker> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Color(0xffe6cf8c),
         title: Text('Portal Pin: ${widget.pin}'),
         actions: [
           IconButton(
@@ -121,6 +123,48 @@ class IndividualWorkerState extends State<IndividualWorker> {
               _fetchAdditionalDetails();
               _fetchDocuments();
             },
+          ),
+          Container(
+            margin: EdgeInsets.symmetric(
+                horizontal: 8.0), // Set your desired margin
+            child: ElevatedButton(
+              onPressed: () {
+                // Navigate to ContractTextWidget
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ContractTextWidget(
+                      name: _workerDetails!['name'],
+                      surname: _workerDetails!['surname'],
+                      mobile: _workerDetails!['mobile_number'],
+                      id: _workerDetails!['said'],
+                      address: _workerDetails!['address'],
+                      bankDetails: _workerDetails!['bank_details'],
+                      nextOfKin: _workerDetails!['next_of_kin'],
+                      said: _workerDetails!['said'],
+                      workerpin: _workerDetails!['workerpin'],
+                      childrenNames: _workerDetails!['children_names'],
+                      parentDetails: _workerDetails!['parent_details'],
+                      location: _additionalDetails!['location'],
+                      hourlyRate: _additionalDetails!['hourly_rate'].toString(),
+                      project: _additionalDetails!['project'],
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[900], // Background color
+                foregroundColor: Colors.white, // Text color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8), // Rounded corners
+                ),
+              ),
+              child: Text(
+                'Generate Contract',
+                style: TextStyle(
+                    color: Color(0xffe6cf8c)), // Ensure text color is white
+              ),
+            ),
           ),
         ],
       ),
