@@ -350,14 +350,39 @@ Employer SINCOT TRADING
     final tempFile = File('${tempDir.path}/contract_${name}_$surname.txt');
     await tempFile.writeAsBytes(bytes); // Write bytes to the file
 
+    // Retrieve the workerpin from the profiles table
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+
+    if (userId == null) {
+      return;
+    }
+
+    final response = await Supabase.instance.client
+        .from('profiles')
+        .select('workerpin')
+        .eq('user_id', userId)
+        .single();
+
+    final workerPin = response['workerpin'] as String?;
+
+    if (workerPin == null) {
+      return;
+    }
+
+    // Define the storage path
+    final storagePath = 'uploads/$workerPin/contract_${name}_$surname.txt';
+    final storage = Supabase.instance.client.storage.from('profiles');
+
     // Upload the file to Supabase
     try {
-      final response = await Supabase.instance.client.storage
-          .from('profiles/uploads/pin')
-          .upload('contract_${name}_$surname.txt', tempFile);
+      final uploadResponse = await storage.upload(storagePath, tempFile);
 
       // Handle the response
-      print('Contract uploaded successfully: $response');
+      print('Contract uploaded successfully: $uploadResponse');
+
+      // Get the public URL of the uploaded file
+      final publicUrl = storage.getPublicUrl(storagePath);
+      print('Contract uploaded to: $publicUrl'); // Use the public URL as needed
     } catch (e) {
       print('Error uploading contract: $e');
     } finally {
