@@ -1,5 +1,11 @@
+// ignore_for_file: unused_local_variable, avoid_print
+
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'textutils.dart';
+import 'package:sincotdashboard/textutils.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+// Import for utf8.encode
 
 class ContractTextWidget extends StatelessWidget {
   final String name;
@@ -43,7 +49,7 @@ class ContractTextWidget extends StatelessWidget {
     return '$year/$month/$day';
   }
 
-  // Method to generate the contract content
+  // Method to generate the contract content ```dart
   String getContractContent() {
     final formattedDate = getFormattedDate();
     return '''
@@ -65,7 +71,7 @@ I.D. Number: $said
 
 (Herein after referred to as "the Employee")
 
-JOB DESCRIPTION #
+JOB DESCRIPTION $project
 
 STATUTORY DEDUCTIONS PER MONTH
 
@@ -82,7 +88,6 @@ Please note that no banking details will be changed after the acceptance of this
 Any changes to the above must be communicated to the Employer in writing within 30 (Thirty) days of the change.
 
 Address: $address
-Hometown: #
 Banking Details: $bankDetails
 Tax No: #
 Employee Contact No: $mobile
@@ -123,7 +128,7 @@ This is NOT a permanent employment contract and under NO circumstances may it be
 
 • The employee undertakes and agrees to work overtime from time to time. The rate of pay for overtime worked will be paid in terms of the Basic Conditions of Employment Act. (BCEA).
 
-• Where an employee works less than required number of weekly hours, any overtime hours for that week will be used to make up the shortfall. This will not apply where an employee is on sick leave in terms of “Paid Sick Leave” or Sunday overtime.
+• Where an employee works less than the required number of weekly hours, any overtime hours for that week will be used to make up the shortfall. This will not apply where an employee is on sick leave in terms of “Paid Sick Leave” or Sunday overtime.
 
 • The employee must clock in and out every day. No clocking will result in being booked AWOP / Unpaid.
 
@@ -138,9 +143,10 @@ This is NOT a permanent employment contract and under NO circumstances may it be
 • REMUNERATION
 
 • The employee shall be remunerated as agreed and as such deductions as per the cover page.
+The hourly rate is: $hourlyRate
 Annual increases will be made in March each year, according to the client agreement. No pay increases will be considered before 12 months’ consecutive work has been completed.
 
-• The payment of Bonus / Incentive / Allowance will not form part of the employee’s conditions of employment and shall solely be on the discretion of the employer.
+• The payment of Bonus / Incentive / Allowance will not form part of the employee’s conditions of employment and shall solely be at the discretion of the employer.
 
 • The employer will not pay the employee for any absenteeism and the rule “No Work No Pay” will be strictly adhered to.
 
@@ -176,10 +182,6 @@ Kindly complete the Names & Surnames of your family members as / where applicabl
 WHEN THE EMPLOYEE’S CHILD IS SICK:
 Children: $childrenNames
 
-Adoptive Children: #
-
-Grand Children: #
-
 IN THE EVENT OF THE DEATH OF A MEMBER OF THE EMPLOYEE’S IMMEDIATE FAMILY:
 
 Immediate Family means:
@@ -188,17 +190,11 @@ Immediate Family means:
 
 • The employee’s parent, adoptive parent, grandparent, child, adopted child, grand children (as per above) or siblings.
 
-Spouse/Life Partner: #
+Spouse/Life Partner: $nextOfKin
 
 Parents: $parentDetails
 
-Adoptive Parents: #
-
-Grand Parents: #
-
-Brothers: #
-
-Sisters: #
+Adoptive Parents: $parentDetails
 
 Before granting an employee leave in terms of this clause, an employer may require reasonable proof of an event for which the leave was required.
 
@@ -243,7 +239,6 @@ The employee’s conditions of employment will be regulated by this contract and
 
 • The employer will have the right to deduct from the employee’s wages any amount to replace tools or equipment that was lost or damaged by the employees.
 
- ```dart
 • If the employee resigns from the company within 3 months of the receipt of any PPE, the employee will be liable for the cost of all PPE issued to him/her within the three months.
 
 • DESERTION / ABSCONDMENT
@@ -313,36 +308,64 @@ Should the company have to embark on any short time and or lay off such will be 
 Should the client temporarily stop work on the relevant site, due to circumstances beyond the employer’s control, the employee hereby agrees that the employer may consider and implement a lay-off to avoid dismissal based on operational requirements, after giving the employee two working days-notice. The employee also hereby agrees that the time-period the employee is placed on lay off will be considered “No Work No Pay.”
 
 26. NOTICE PERIOD AND TERMINATION OF EMPLOYMENT
-If the employer or the employee intends to terminate this contract of employment notice must be given to the other party as set out in terms of the Labour Relations Act as set out below.
+If the employer or the employee intends to terminate this contract of employment, notice must be given to the other party as set out in terms of the Labour Relations Act as follows:
 
-• One week if employed for six months or less
+- One week if employed for six months or less
+- Two weeks if employed for more than six months
+- Four weeks if employed for more than 12 months
 
-• Two weeks if employed for more than six months
+Should the employee fail to give notice as set out above, the employer may withhold an amount equal to the notice period from the employee’s last wage/salary. If the employee resigns from the company within 3 months, the employee will be liable for the cost of the entry medical.
 
-• Four weeks if employed for more than 12 months
+Either party can terminate this agreement in written notice. In the case where an employee is illiterate, verbal notice may be given.
 
-Should the employee fail to give notice as set out above the employer may then withhold an amount equal to the notice period from the employee’s last wage/salary. If the employee resigns from the company within 3 months, the employee will be liable for the cost of the entry medical.
-
-Either party can terminate this agreement in written notice. In the case where an employee is illiterate verbal notice may be given.
-
-No notice period may run concurrently with any period of annual, sick, maternity or family responsibility leave.
+No notice period may run concurrently with any period of annual, sick, maternity, or family responsibility leave.
 
 A notice period will not be applicable if the employee’s services are terminated due to misconduct.
 
 27. POPI ACT
-No personal information will be given out to any 3rd party except to a union that you are a member of, CCMA, SARS, and upon request from the client.
+No personal information will be given out to any third party except to a union that you are a member of, CCMA, SARS, and upon request from the client.
 
 28. INFORMATION FILE
 The employee agrees that a copy of the Company’s Policies / Procedures / Disciplinary Code, as amended from time to time, was explained to him/her and that a copy will be made available to him/her at the employer’s office / site.
 
-It is the responsibility of each employee to familiarise themselves with the company’s policies and procedures.
+It is the responsibility of each employee to familiarize themselves with the company’s policies and procedures.
 
 Signed at # on this $formattedDate.
 
-Employee $surname
-Witness ______________
+Employee $name $surname
+
 Employer SINCOT TRADING
 ''';
+  }
+
+  Future<void> uploadContract() async {
+    // Generate the contract content
+    String contractContent = getContractContent();
+
+    // Convert the contract content to bytes
+    final bytes = utf8.encode(contractContent); // Convert string to bytes
+
+    // Create a temporary file
+    final tempDir = Directory.systemTemp; // Get the system's temp directory
+    final tempFile = File('${tempDir.path}/contract_${name}_$surname.txt');
+    await tempFile.writeAsBytes(bytes); // Write bytes to the file
+
+    // Upload the file to Supabase
+    try {
+      final response = await Supabase.instance.client.storage
+          .from('profiles/uploads/pin')
+          .upload('contract_${name}_$surname.txt', tempFile);
+
+      // Handle the response
+      print('Contract uploaded successfully: $response');
+    } catch (e) {
+      print('Error uploading contract: $e');
+    } finally {
+      // Clean up: Delete the temporary file after uploading
+      if (await tempFile.exists()) {
+        await tempFile.delete();
+      }
+    }
   }
 
   @override
@@ -350,6 +373,24 @@ Employer SINCOT TRADING
     return Scaffold(
       appBar: AppBar(
         title: Text('Contract for $name $surname'),
+        actions: [
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 8.0),
+            child: ElevatedButton(
+              onPressed: () async {
+                await uploadContract();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[900], // Background color
+                foregroundColor: Colors.white, // Text color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8), // Rounded corners
+                ),
+              ),
+              child: Text('Send to worker'),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
