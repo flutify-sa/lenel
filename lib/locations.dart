@@ -43,7 +43,6 @@ class _LocationsState extends State<Locations> {
       });
       print('Fetched workers: $workers'); // Log the fetched workers
     } catch (e) {
-      print('Error fetching workers: $e'); // Print the error to the terminal
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to fetch workers: $e')),
@@ -122,63 +121,77 @@ class _LocationsState extends State<Locations> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search by location...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    _filterWorkers(''); // Clear the search and show all workers
-                  },
-                ),
-              ),
-              onChanged: _filterWorkers, // Filter workers as the user types
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/map.png'), // Set your background image
+            fit: BoxFit.cover, // Cover the entire screen
+            colorFilter: ColorFilter.mode(
+              Color.fromRGBO(
+                  255, 255, 255, 0.3), // Use withValues instead of withOpacity
+              BlendMode.dstATop, // Blend mode to apply the color filter
             ),
           ),
-          // Display filtered workers or "NO LOCATIONS FOUND"
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : filteredWorkers.isEmpty
-                    ? Center(
-                        child: Text(
-                          'NO LOCATIONS FOUND',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: filteredWorkers.length,
-                        itemBuilder: (context, index) {
-                          final worker = filteredWorkers[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0, vertical: 8.0),
-                            child: Text(
-                              '${worker['name']} ${worker['surname']} - ${worker['location']}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[700],
-                              ),
+        ),
+        child: Column(
+          children: [
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search by location...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      _searchController.clear();
+                      _filterWorkers(
+                          ''); // Clear the search and show all workers
+                    },
+                  ),
+                ),
+                onChanged: _filterWorkers, // Filter workers as the user types
+              ),
+            ),
+            // Display filtered workers or "NO LOCATIONS FOUND"
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : filteredWorkers.isEmpty
+                      ? Center(
+                          child: Text(
+                            'NO LOCATIONS FOUND',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[600],
                             ),
-                          );
-                        },
-                      ),
-          ),
-        ],
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: filteredWorkers.length,
+                          itemBuilder: (context, index) {
+                            final worker = filteredWorkers[index];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0, vertical: 8.0),
+                              child: Text(
+                                '${worker['name']} ${worker['surname']} - ${worker['location']}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
       ),
     );
   }
