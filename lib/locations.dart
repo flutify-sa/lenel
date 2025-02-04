@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
@@ -13,10 +13,13 @@ class Locations extends StatefulWidget {
 }
 
 class _LocationsState extends State<Locations> {
+  final SupabaseClient _supabase = Supabase.instance.client;
+
   List<Map<String, dynamic>> workers = []; // List to store workers data
   List<Map<String, dynamic>> filteredWorkers =
       []; // Filtered list based on search input
   final TextEditingController _searchController = TextEditingController();
+  bool _isLoading = false; // Changed to a state variable
 
   @override
   void initState() {
@@ -24,35 +27,32 @@ class _LocationsState extends State<Locations> {
     _fetchWorkers(); // Fetch workers data when the widget initializes
   }
 
-  // Function to fetch workers data from Supabase
   Future<void> _fetchWorkers() async {
+    setState(() {
+      _isLoading = true; // Set loading to true
+    });
     try {
-      final response = await Supabase.instance.client
+      final response = await _supabase
           .from('workers')
-          .select('name, surname, location');
-
+          .select('name, surname, location'); // Removed the trailing comma
       setState(() {
         workers = List<Map<String, dynamic>>.from(response);
         filteredWorkers =
             workers; // Initialize filteredWorkers with all workers
+        _isLoading = false; // Set loading to false after fetching
       });
+      print('Fetched workers: $workers'); // Log the fetched workers
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to fetch workers: $e')),
-      );
+      print('Error fetching workers: $e'); // Print the error to the terminal
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to fetch workers: $e')),
+        );
+      }
+      setState(() {
+        _isLoading = false; // Set loading to false on error
+      });
     }
-  }
-
-  // Function to filter workers based on search input
-  void _filterWorkers(String query) {
-    setState(() {
-      filteredWorkers = workers
-          .where((worker) => worker['location']
-              .toString()
-              .toLowerCase()
-              .contains(query.toLowerCase())) // Case-insensitive search
-          .toList();
-    });
   }
 
   // Function to export data to a file
@@ -76,15 +76,32 @@ class _LocationsState extends State<Locations> {
       await file.writeAsString(entries);
 
       // Show a confirmation message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Data exported to ${file.path}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Data exported to ${file.path}')),
+        );
+      }
     } catch (e) {
       // Handle any exceptions that occur during file export
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to export data: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to export data: $e')),
+        );
+      }
     }
+  }
+
+  // Function to filter workers based on search query
+  void _filterWorkers(String query) {
+    setState(() {
+      filteredWorkers = workers
+          .where((worker) => worker['location']
+              .toString()
+              .toLowerCase()
+              .contains(query.toLowerCase()))
+          .toList();
+      print('Filtered workers: $filteredWorkers'); // Log the filtered workers
+    });
   }
 
   @override
@@ -93,6 +110,11 @@ class _LocationsState extends State<Locations> {
       appBar: AppBar(
         title: const Text('Locations'),
         actions: [
+          // Refresh button
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _fetchWorkers, // Refresh data
+          ),
           // Export button
           IconButton(
             icon: const Icon(Icons.save),
@@ -125,34 +147,36 @@ class _LocationsState extends State<Locations> {
           ),
           // Display filtered workers or "NO LOCATIONS FOUND"
           Expanded(
-            child: filteredWorkers.isEmpty
-                ? Center(
-                    child: Text(
-                      'NO LOCATIONS FOUND',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: filteredWorkers.length,
-                    itemBuilder: (context, index) {
-                      final worker = filteredWorkers[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 8.0),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : filteredWorkers.isEmpty
+                    ? Center(
                         child: Text(
-                          '${worker['name']} ${worker['surname']} - ${worker['location']}',
+                          'NO LOCATIONS FOUND',
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.grey[700],
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[600],
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      )
+                    : ListView.builder(
+                        itemCount: filteredWorkers.length,
+                        itemBuilder: (context, index) {
+                          final worker = filteredWorkers[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0, vertical: 8.0),
+                            child: Text(
+                              '${worker['name']} ${worker['surname']} - ${worker['location']}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
           ),
         ],
       ),
