@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:sincotdashboard/individualworker.dart';
+import 'package:sincotdashboard/locations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ListOfWorkers extends StatefulWidget {
@@ -17,41 +18,68 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _surnameController = TextEditingController();
   final TextEditingController _idController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
   final TextEditingController _hourlyRateController = TextEditingController();
   final TextEditingController _projectController = TextEditingController();
   final TextEditingController _pinController = TextEditingController();
 
-  // List to store the fetched workers
   List<Map<String, dynamic>> _workers = [];
+  final List<String> _locations = [
+    'Avondale - Substation - Upington - AVD1',
+    'Avondale - OHL - Upington - AVD2',
+    'Doornhoek PV Farm - Klerksdorp - DRN',
+    'Graspan - Hopetown - GRA1',
+    'Grooetspruit - Allanridge - GSO1',
+    'Springbok Solar - Substation & OHL - Virginia - SPS',
+    'Umsinde WF, Khangela Umoyeni WF (Northern Cluster) - Substation - Murraysburg - UKU1',
+    'Umsinde WF, Khangela Umoyeni WF (Northern Cluster) - OHL- Murraysburg - UKU2',
+    'Zibulo overhead lines - Ogies, MP - ZIB',
+    'Zen Wind farm - Tulbach, WC - ZEN',
+    'Bergrivier Wind Farm - Tulbach, WC - BER',
+  ];
+
+  String? _selectedLocation;
 
   Future<void> _fetchWorkers() async {
-    final response =
-        await _supabase.from('workers').select('name, surname, pin');
+    final response = await _supabase.from('workers').select(
+        'name, surname, pin, id_number, location, hourly_rate, project');
     setState(() {
       _workers = List<Map<String, dynamic>>.from(response);
     });
   }
 
-  // Function to handle form submission and insert data into Supabase
   Future<void> _handleSubmit() async {
+    if (_selectedLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select a location')),
+      );
+      return;
+    }
+
     await _supabase.from('workers').insert([
       {
         'name': _nameController.text,
         'surname': _surnameController.text,
         'id_number': _idController.text,
-        'location': _locationController.text,
+        'location': _selectedLocation,
         'hourly_rate': double.tryParse(_hourlyRateController.text) ?? 0.0,
         'project': _projectController.text,
         'pin': int.tryParse(_pinController.text) ?? 0,
       }
     ]);
 
-    _fetchWorkers(); // Refresh the list after adding a new worker
-    Navigator.of(context).pop(); // Close the dialog
+    _fetchWorkers();
+    Navigator.of(context).pop();
   }
 
   void _showFormDialog() {
+    _nameController.clear();
+    _surnameController.clear();
+    _idController.clear();
+    _hourlyRateController.clear();
+    _projectController.clear();
+    _pinController.clear();
+    _selectedLocation = null;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -73,9 +101,20 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
                   controller: _idController,
                   decoration: InputDecoration(labelText: 'ID Number'),
                 ),
-                TextField(
-                  controller: _locationController,
+                DropdownButtonFormField<String>(
                   decoration: InputDecoration(labelText: 'Location'),
+                  value: _selectedLocation,
+                  items: _locations.map((location) {
+                    return DropdownMenuItem<String>(
+                      value: location,
+                      child: Text(location),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedLocation = newValue;
+                    });
+                  },
                 ),
                 TextField(
                   controller: _hourlyRateController,
@@ -97,7 +136,7 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[900],
@@ -127,7 +166,7 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
 
   Future<void> _deleteWorker(String pin) async {
     await _supabase.from('workers').delete().eq('pin', pin);
-    _fetchWorkers(); // Refresh the list after deletion
+    _fetchWorkers();
   }
 
   void _showDeleteConfirmation(String pin) {
@@ -140,14 +179,14 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               child: Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
                 _deleteWorker(pin);
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               child: Text('Delete'),
             ),
@@ -157,10 +196,126 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
     );
   }
 
+  void _showEditFormDialog(Map<String, dynamic> worker) {
+    _nameController.text = worker['name'] ?? '';
+    _surnameController.text = worker['surname'] ?? '';
+    _idController.text = worker['id_number'] ?? '';
+    _selectedLocation =
+        worker['location']; // Ensure this value exists in _locations
+    _hourlyRateController.text = worker['hourly_rate']?.toString() ?? '';
+    _pinController.text = worker['pin']?.toString() ?? '';
+    _projectController.text = worker['project'] ?? '';
+
+    // Check if the selected location is valid
+    if (!_locations.contains(_selectedLocation)) {
+      _selectedLocation = null; // Reset if not valid
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Worker'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: 'Name'),
+                ),
+                TextField(
+                  controller: _surnameController,
+                  decoration: InputDecoration(labelText: 'Surname'),
+                ),
+                TextField(
+                  controller: _idController,
+                  decoration: InputDecoration(labelText: 'ID Number'),
+                ),
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(labelText: 'Location'),
+                  value: _selectedLocation,
+                  items: _locations.map((location) {
+                    return DropdownMenuItem<String>(
+                      value: location,
+                      child: Text(location),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedLocation = newValue;
+                    });
+                  },
+                ),
+                TextField(
+                  controller: _hourlyRateController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: 'Hourly Rate'),
+                ),
+                TextField(
+                  controller: _projectController,
+                  decoration: InputDecoration(labelText: 'Project'),
+                ),
+                TextField(
+                  controller: _pinController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: 'Pin'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[900],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await _updateWorker(worker['pin'].toString());
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[900],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _updateWorker(String pin) async {
+    await _supabase.from('workers').update({
+      'name': _nameController.text,
+      'surname': _surnameController.text,
+      'id_number': _idController.text,
+      'location': _selectedLocation,
+      'hourly_rate': double.tryParse(_hourlyRateController.text) ?? 0.0,
+      'project': _projectController.text,
+      'pin': int.tryParse(_pinController.text) ?? 0,
+    }).eq('pin', pin);
+
+    _fetchWorkers();
+  }
+
   @override
   void initState() {
     super.initState();
-    _fetchWorkers(); // Fetch workers when the screen loads
+    _fetchWorkers();
   }
 
   @override
@@ -178,7 +333,16 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
           IconButton(
             icon: Icon(Icons.refresh, color: Color(0xffe6cf8c)),
             onPressed: () {
-              _fetchWorkers(); // Call the fetch method when pressed
+              _fetchWorkers();
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.location_on, color: Color(0xffe6cf8c)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Locations()),
+              );
             },
           ),
         ],
@@ -219,12 +383,23 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
                               title: Text(
                                   '${worker['name']} ${worker['surname']}'),
                               subtitle: Text('Pin: ${worker['pin']}'),
-                              trailing: IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () {
-                                  _showDeleteConfirmation(
-                                      worker['pin'].toString());
-                                },
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.edit, color: Colors.blue),
+                                    onPressed: () {
+                                      _showEditFormDialog(worker);
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () {
+                                      _showDeleteConfirmation(
+                                          worker['pin'].toString());
+                                    },
+                                  ),
+                                ],
                               ),
                               onTap: () {
                                 Navigator.push(

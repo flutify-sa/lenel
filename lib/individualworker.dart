@@ -108,6 +108,11 @@ class IndividualWorkerState extends State<IndividualWorker> {
     }
   }
 
+  // New method to refresh documents
+  void _refreshDocuments() {
+    _fetchDocuments(); // Call the fetch method to refresh the documents
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -299,9 +304,22 @@ class IndividualWorkerState extends State<IndividualWorker> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Uploaded Documents:',
-                              style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.bold)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Uploaded Documents:',
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.bold),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.refresh),
+                                onPressed:
+                                    _refreshDocuments, // Call refresh function
+                                tooltip: 'Refresh Documents',
+                              ),
+                            ],
+                          ),
                           SizedBox(height: 8),
                           _documentUrls.isEmpty
                               ? Text('No documents found.',
@@ -336,8 +354,8 @@ class IndividualWorkerState extends State<IndividualWorker> {
                                         },
                                         errorBuilder:
                                             (context, error, stackTrace) {
-                                          return Icon(Icons.error,
-                                              color: Colors.red);
+                                          // Return an empty Container to hide the error icon
+                                          return Container(); // You can also return a different widget if you prefer
                                         },
                                       ),
                                     );
