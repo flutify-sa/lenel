@@ -1,88 +1,54 @@
-// ignore_for_file: unused_import
+// ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-//import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
 import 'dart:io'; // For file operations
-import 'package:path_provider/path_provider.dart'; // For getting the app's documents directory
 import 'package:file_picker/file_picker.dart'; // For allowing the user to choose the save location
 
 class Locations extends StatefulWidget {
-  final String? selectedCode; // Selected location code
-  final String? name; // Worker's name
-  final String? surname; // Worker's surname
-
-  const Locations({
-    super.key,
-    this.selectedCode,
-    this.name,
-    this.surname,
-  });
+  const Locations({super.key});
 
   @override
   State<Locations> createState() => _LocationsState();
 }
 
 class _LocationsState extends State<Locations> {
-  // Key for saving data in SharedPreferences
-  //static const String _prefsKey = 'worker_location_data';
-
-  // List to store saved entries
-  List<String> savedEntries = [];
-
-  // Controller for the search input
+  List<Map<String, dynamic>> workers = []; // List to store workers data
+  List<Map<String, dynamic>> filteredWorkers =
+      []; // Filtered list based on search input
   final TextEditingController _searchController = TextEditingController();
-
-  // Filtered list based on search input
-  List<String> filteredEntries = [];
 
   @override
   void initState() {
     super.initState();
-    // _loadSavedData(); // Load saved data when the widget initializes
-    _saveData(); // Save new data when the widget initializes
+    _fetchWorkers(); // Fetch workers data when the widget initializes
   }
 
-  // Function to load saved data from SharedPreferences
-  // Future<void> _loadSavedData() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final savedData = prefs.getStringList(_prefsKey) ?? [];
-  //   setState(() {
-  //     savedEntries = savedData;
-  //     filteredEntries =
-  //         savedData; // Initialize filteredEntries with all entries
-  //   });
-  // }
-
-  // Function to save data to SharedPreferences
-  Future<void> _saveData() async {
-    if (widget.name != null &&
-        widget.surname != null &&
-        widget.selectedCode != null) {
-      final entry = '${widget.name} ${widget.surname} - ${widget.selectedCode}';
-      // final prefs = await SharedPreferences.getInstance();
-
-      // Remove all previous entries with the same name and surname
-      savedEntries
-          .removeWhere((e) => e.startsWith('${widget.name} ${widget.surname}'));
-
-      // Add the new entry
-      savedEntries.add(entry);
-
-      // Save the updated list to SharedPreferences
-      //   await prefs.setStringList(_prefsKey, savedEntries);
+  // Function to fetch workers data from Supabase
+  Future<void> _fetchWorkers() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('workers')
+          .select('name, surname, location');
 
       setState(() {
-        filteredEntries =
-            savedEntries; // Update filteredEntries with the new list
+        workers = List<Map<String, dynamic>>.from(response);
+        filteredWorkers =
+            workers; // Initialize filteredWorkers with all workers
       });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch workers: $e')),
+      );
     }
   }
 
-  // Function to filter entries based on search input
-  void _filterEntries(String query) {
+  // Function to filter workers based on search input
+  void _filterWorkers(String query) {
     setState(() {
-      filteredEntries = savedEntries
-          .where((entry) => entry
+      filteredWorkers = workers
+          .where((worker) => worker['location']
+              .toString()
               .toLowerCase()
               .contains(query.toLowerCase())) // Case-insensitive search
           .toList();
@@ -97,32 +63,27 @@ class _LocationsState extends State<Locations> {
 
       if (selectedDirectory == null) {
         // User canceled the picker
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Export canceled by user')),
-          );
-        }
         return;
       }
 
       // Create the file in the selected directory
       final file = File('$selectedDirectory/locations.txt');
 
-      // Write the savedEntries list to the file
-      await file.writeAsString(savedEntries.join('\n'));
+      // Write the filtered workers list to the file
+      final entries = filteredWorkers.map((worker) {
+        return '${worker['name']} ${worker['surname']} - ${worker['location']}';
+      }).join('\n');
+      await file.writeAsString(entries);
 
       // Show a confirmation message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Data exported to ${file.path}')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Data exported to ${file.path}')),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to export data: $e')),
-        );
-      }
+      // Handle any exceptions that occur during file export
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to export data: $e')),
+      );
     }
   }
 
@@ -155,16 +116,16 @@ class _LocationsState extends State<Locations> {
                   icon: const Icon(Icons.clear),
                   onPressed: () {
                     _searchController.clear();
-                    _filterEntries(''); // Clear the search and show all entries
+                    _filterWorkers(''); // Clear the search and show all workers
                   },
                 ),
               ),
-              onChanged: _filterEntries, // Filter entries as the user types
+              onChanged: _filterWorkers, // Filter workers as the user types
             ),
           ),
-          // Display filtered entries or "NO LOCATIONS FOUND"
+          // Display filtered workers or "NO LOCATIONS FOUND"
           Expanded(
-            child: filteredEntries.isEmpty
+            child: filteredWorkers.isEmpty
                 ? Center(
                     child: Text(
                       'NO LOCATIONS FOUND',
@@ -176,13 +137,14 @@ class _LocationsState extends State<Locations> {
                     ),
                   )
                 : ListView.builder(
-                    itemCount: filteredEntries.length,
+                    itemCount: filteredWorkers.length,
                     itemBuilder: (context, index) {
+                      final worker = filteredWorkers[index];
                       return Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16.0, vertical: 8.0),
                         child: Text(
-                          filteredEntries[index],
+                          '${worker['name']} ${worker['surname']} - ${worker['location']}',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey[700],

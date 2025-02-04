@@ -130,10 +130,8 @@ class _SpecificWorkerState extends State<SpecificWorker> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => Locations(
-                    selectedCode: selectedCode, // Pass selectedCode
-                    name: worker['name'], // Pass worker's name
-                    surname: worker['surname'], // Pass worker's surname
-                  ),
+                      // Pass worker's surname
+                      ),
                 ),
               );
             },
