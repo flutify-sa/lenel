@@ -31,4 +31,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-exe
-          path: build/windows/runner/Release/SincotTradingDashboard.exe
+          path: build/windows/x64/runner/Release/sincotdashboard.exe
