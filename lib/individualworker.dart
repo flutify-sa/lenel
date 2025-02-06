@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Import the intl package for date formatting
 import 'package:sincotdashboard/contract_text_widget.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class IndividualWorker extends StatefulWidget {
   final String pin;
@@ -299,7 +300,7 @@ class IndividualWorkerState extends State<IndividualWorker> {
                   ),
                   SizedBox(width: 16), // Space between the two columns
                   Expanded(
-                    flex: 1, // Give less space to the right column
+                    flex: 1,
                     child: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,8 +315,7 @@ class IndividualWorkerState extends State<IndividualWorker> {
                               ),
                               IconButton(
                                 icon: Icon(Icons.refresh),
-                                onPressed:
-                                    _refreshDocuments, // Call refresh function
+                                onPressed: _refreshDocuments,
                                 tooltip: 'Refresh Documents',
                               ),
                             ],
@@ -330,33 +330,42 @@ class IndividualWorkerState extends State<IndividualWorker> {
                                     return Padding(
                                       padding: const EdgeInsets.symmetric(
                                           vertical: 8.0),
-                                      child: Image.network(
-                                        url,
-                                        width: 100,
-                                        fit: BoxFit.cover,
-                                        loadingBuilder:
-                                            (context, child, loadingProgress) {
-                                          if (loadingProgress == null) {
-                                            return child;
+                                      child: GestureDetector(
+                                        onTap: () async {
+                                          if (await canLaunch(url)) {
+                                            await launch(url);
+                                          } else {
+                                            // Handle cases where the URL can't be opened
+                                            print('Could not launch $url');
                                           }
-                                          return Center(
-                                            child: CircularProgressIndicator(
-                                              value: loadingProgress
-                                                          .expectedTotalBytes !=
-                                                      null
-                                                  ? loadingProgress
-                                                          .cumulativeBytesLoaded /
-                                                      loadingProgress
-                                                          .expectedTotalBytes!
-                                                  : null,
-                                            ),
-                                          );
                                         },
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          // Return an empty Container to hide the error icon
-                                          return Container(); // You can also return a different widget if you prefer
-                                        },
+                                        child: Image.network(
+                                          url,
+                                          width: 100,
+                                          fit: BoxFit.cover,
+                                          loadingBuilder: (context, child,
+                                              loadingProgress) {
+                                            if (loadingProgress == null) {
+                                              return child;
+                                            }
+                                            return Center(
+                                              child: CircularProgressIndicator(
+                                                value: loadingProgress
+                                                            .expectedTotalBytes !=
+                                                        null
+                                                    ? loadingProgress
+                                                            .cumulativeBytesLoaded /
+                                                        loadingProgress
+                                                            .expectedTotalBytes!
+                                                    : null,
+                                              ),
+                                            );
+                                          },
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            return Container(); // Show alternative widget on error
+                                          },
+                                        ),
                                       ),
                                     );
                                   }).toList(),
@@ -364,7 +373,7 @@ class IndividualWorkerState extends State<IndividualWorker> {
                         ],
                       ),
                     ),
-                  ),
+                  )
                 ],
               ),
             ),

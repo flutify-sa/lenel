@@ -66,7 +66,7 @@ class UploadDocumentsState extends State<UploadDocuments> {
         if (documentType == 'ID') isIdUploaded = true;
         if (documentType == 'Address') isAddressUploaded = true;
         if (documentType == 'Qualifications') isQualificationsUploaded = true;
-        if (documentType == 'EEA1') isEEA1Uploaded = true;
+        //    if (documentType == 'EEA1') isEEA1Uploaded = true;
         if (documentType == 'Bank') isBankConfirmationUploaded = true;
       });
     } catch (e) {
@@ -88,7 +88,7 @@ class UploadDocumentsState extends State<UploadDocuments> {
     bool allDocumentsUploaded = isIdUploaded &&
         isAddressUploaded &&
         isQualificationsUploaded &&
-        isEEA1Uploaded &&
+        //     isEEA1Uploaded &&
         isBankConfirmationUploaded;
 
     return Scaffold(
