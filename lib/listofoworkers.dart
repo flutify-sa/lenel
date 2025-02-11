@@ -38,10 +38,12 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
   ];
 
   String? _selectedLocation;
-
   Future<void> _fetchWorkers() async {
-    final response = await _supabase.from('workers').select(
-        'name, surname, pin, id_number, location, hourly_rate, project');
+    final response =
+        await _supabase.from('workers').select('*'); // Fetch all fields
+
+    print(response);
+
     setState(() {
       _workers = List<Map<String, dynamic>>.from(response);
     });
