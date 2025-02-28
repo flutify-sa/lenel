@@ -16,8 +16,9 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v3
 
-      - name: Set up Git
-        uses: actions/setup-git@v2  # This action sets up Git
+      - name: Install Git
+        run: |
+          choco install git -y  # Installs Git using Chocolatey
 
       - name: Verify Git Installation
         run: |
