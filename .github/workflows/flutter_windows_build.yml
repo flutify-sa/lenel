@@ -18,11 +18,11 @@ jobs:
 
       - name: Install Git
         run: |
-          choco install git -y  # Installs Git using Chocolatey (a Windows package manager)
+          choco install git -y  # Installs Git using Chocolatey
 
       - name: Set up Flutter manually
         run: |
-          git clone https://github.com/flutter/flutter.git -b 3.27.3 --depth 1 flutter
+          git clone https://github.com/flutter/flutter.git -b 3.27.3 --depth 1 flutter || exit 1
           flutter\bin\flutter doctor -v
           flutter\bin\flutter precache --windows
         env:
@@ -54,6 +54,7 @@ jobs:
               exit /b 0
             )
             echo "ERROR: flutter_windows.dll not found anywhere"
+            exit 1
           )
 
       - name: Upload Windows executable
