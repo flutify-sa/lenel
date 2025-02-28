@@ -109,7 +109,14 @@ class _ListOfWorkersState extends State<ListOfWorkers> {
                   items: _locations.map((location) {
                     return DropdownMenuItem<String>(
                       value: location,
-                      child: Text(location),
+                      child: SizedBox(
+                        width: 200, // Adjust this value based on your layout
+                        child: Text(
+                          location,
+                          overflow: TextOverflow
+                              .ellipsis, // Truncate long text with "..."
+                        ),
+                      ),
                     );
                   }).toList(),
                   onChanged: (String? newValue) {
