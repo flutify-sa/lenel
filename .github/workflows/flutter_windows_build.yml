@@ -1,4 +1,4 @@
-name: Build Windows Executable
+name: Test Git Availability
 
 on:
   push:
@@ -9,61 +9,10 @@ on:
       - main
 
 jobs:
-  build:
+  test:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v3
-
-      - name: Install Git
+      - name: Check Git Version
         run: |
-          choco install git -y  # Installs Git using Chocolatey
-
-      - name: Verify Git Installation
-        run: |
-          git --version  # Check if Git is installed
-          echo "Git installed successfully."
-
-      - name: Set up Flutter manually
-        run: |
-          git clone https://github.com/flutter/flutter.git -b stable --depth 1 flutter || exit 1
-          flutter\bin\flutter doctor -v
-          flutter\bin\flutter precache --windows
-        env:
-          PATH: ${{ github.workspace }}\flutter\bin;${{ env.PATH }}
-
-      - name: Debug Flutter environment
-        run: |
-          echo "Listing engine directory:"
-          dir flutter\bin\cache\artifacts\engine\ /s
-
-      - name: Install dependencies
-        run: flutter\bin\flutter pub get
-
-      - name: Build Windows executable
-        run: flutter\bin\flutter build windows --release
-
-      - name: Package the executable with dependencies
-        run: |
-          mkdir release-package
-          xcopy build\windows\x64\runner\Release\* release-package /E /H /C /I
-          if exist flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll (
-            echo "Found flutter_windows.dll in windows-x64"
-            xcopy flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll release-package /Y
-          ) else (
-            echo "WARNING: flutter_windows.dll not found in windows-x64, searching..."
-            for /r flutter\bin\cache\artifacts\engine\ %%f in (flutter_windows.dll) do (
-              echo "Found flutter_windows.dll at %%f"
-              xcopy "%%f" release-package /Y
-              exit /b 0
-            )
-            echo "ERROR: flutter_windows.dll not found anywhere"
-            exit 1
-          )
-
-      - name: Upload Windows executable
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-exe
-          path: release-package/
+          git --version
