@@ -19,7 +19,8 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.3' # Ensure a compatible Flutter version
+          flutter-version: '3.27.3' # Keeping your version, should be fine
+          channel: 'stable'     # Explicitly set to stable for consistency
 
       - name: Install dependencies
         run: flutter pub get
@@ -27,8 +28,14 @@ jobs:
       - name: Build Windows executable
         run: flutter build windows --release
 
+      - name: Package the executable with dependencies
+        run: |
+          mkdir release-package
+          xcopy build\windows\x64\runner\Release\* release-package /E /H /C /I
+          xcopy flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll release-package /Y
+
       - name: Upload Windows executable
         uses: actions/upload-artifact@v4
         with:
           name: windows-exe
-          path: build/windows/x64/runner/Release/sincotdashboard.exe
+          path: release-package/
