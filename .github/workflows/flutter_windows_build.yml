@@ -16,8 +16,10 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v3
 
-      - name: Verify Git Installation
+      - name: Install Git
         run: |
+          echo "Installing Git..."
+          choco install git -y || exit 1
           git --version  # Check if Git is installed
           echo "Git installed successfully."
 
