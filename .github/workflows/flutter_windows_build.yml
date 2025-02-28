@@ -16,23 +16,24 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v3
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.27.3'
-          channel: 'stable'
+      - name: Set up Flutter manually
+        run: |
+          git clone https://github.com/flutter/flutter.git -b 3.27.3 --depth 1 flutter
+          flutter\bin\flutter doctor -v
+          flutter\bin\flutter precache --windows
+        env:
+          PATH: ${{ github.workspace }}\flutter\bin;${{ env.PATH }}
 
       - name: Debug Flutter environment
         run: |
-          flutter doctor -v
           echo "Listing engine directory:"
           dir flutter\bin\cache\artifacts\engine\ /s
 
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter\bin\flutter pub get
 
       - name: Build Windows executable
-        run: flutter build windows --release
+        run: flutter\bin\flutter build windows --release
 
       - name: Package the executable with dependencies
         run: |
