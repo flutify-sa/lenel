@@ -19,8 +19,14 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.3' # Keeping your version, should be fine
-          channel: 'stable'     # Explicitly set to stable for consistency
+          flutter-version: '3.27.3'
+          channel: 'stable'
+
+      - name: Debug Flutter environment
+        run: |
+          flutter doctor -v
+          echo "Listing engine directory:"
+          dir flutter\bin\cache\artifacts\engine\ /s
 
       - name: Install dependencies
         run: flutter pub get
@@ -32,7 +38,18 @@ jobs:
         run: |
           mkdir release-package
           xcopy build\windows\x64\runner\Release\* release-package /E /H /C /I
-          xcopy flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll release-package /Y
+          if exist flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll (
+            echo "Found flutter_windows.dll in windows-x64"
+            xcopy flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll release-package /Y
+          ) else (
+            echo "WARNING: flutter_windows.dll not found in windows-x64, searching..."
+            for /r flutter\bin\cache\artifacts\engine\ %%f in (flutter_windows.dll) do (
+              echo "Found flutter_windows.dll at %%f"
+              xcopy "%%f" release-package /Y
+              exit /b 0
+            )
+            echo "ERROR: flutter_windows.dll not found anywhere"
+          )
 
       - name: Upload Windows executable
         uses: actions/upload-artifact@v4
