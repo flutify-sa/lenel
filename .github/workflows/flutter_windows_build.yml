@@ -21,10 +21,13 @@ jobs:
           choco install git -y  # Installs Git using Chocolatey
 
       - name: Verify Git Installation
-        run: git --version  # Check if Git is installed
+        run: |
+          git --version  # Check if Git is installed
+          echo "Git installed successfully."
 
       - name: Set up Flutter manually
         run: |
+          sleep 5  # Wait for a few seconds to ensure Git is available
           git clone https://github.com/flutter/flutter.git -b 3.27.3 --depth 1 flutter || exit 1
           flutter\bin\flutter doctor -v
           flutter\bin\flutter precache --windows
