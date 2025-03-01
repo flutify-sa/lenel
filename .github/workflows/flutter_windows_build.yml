@@ -1,5 +1,4 @@
 name: Build Windows Executable
-
 on:
   push:
     branches:
@@ -7,56 +6,59 @@ on:
   pull_request:
     branches:
       - main
-
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4  # Bump to latest version
-
+        uses: actions/checkout@v4
+      
       - name: Install Git
         run: |
-          echo "Installing Git via Chocolatey..."
           choco install git -y
-          if ($LASTEXITCODE -ne 0) { exit 1 }
-          echo "Refreshing PATH..."
+          # Update PATH for this session
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
-          git --version || exit 1
-          echo "Git installed successfully."
-
+          # Verify Git is available
+          git --version
+        shell: powershell
+      
       - name: Set up Flutter manually
         run: |
-          git clone https://github.com/flutter/flutter.git -b stable --depth 1 flutter
-          flutter\bin\flutter doctor -v
-          flutter\bin\flutter precache --windows
-        env:
-          PATH: ${{ github.workspace }}\flutter\bin;${{ env.PATH }}
-
+          # Use the now-available git command
+          git clone https://github.com/flutter/flutter.git -b stable --depth 1
+          # Add flutter to PATH for this job
+          echo "${{ github.workspace }}\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          # Verify Flutter installation
+          .\flutter\bin\flutter doctor -v
+          .\flutter\bin\flutter precache --windows
+        shell: powershell
+      
       - name: Install dependencies
-        run: flutter\bin\flutter pub get
-
+        run: flutter pub get
+        shell: powershell
+      
       - name: Build Windows executable
-        run: flutter\bin\flutter build windows --release
-
+        run: flutter build windows --release
+        shell: powershell
+      
       - name: Package the executable with dependencies
         run: |
           mkdir release-package
-          xcopy build\windows\x64\runner\Release\* release-package /E /H /C /I
-          if exist flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll (
+          xcopy build\windows\runner\Release\* release-package /E /H /C /I
+          if (Test-Path "flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll") {
             echo "Copying flutter_windows.dll from windows-x64..."
             xcopy flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll release-package /Y
-          ) else (
+          } else {
             echo "ERROR: flutter_windows.dll not found"
             exit 1
-          )
-          # Optional: Add more DLLs if needed (e.g., for plugins)
+          }
           dir release-package
-
+        shell: powershell
+      
       - name: Zip the package
         run: |
-          powershell -Command "Compress-Archive -Path release-package\* -DestinationPath windows-exe.zip"
+          Compress-Archive -Path release-package\* -DestinationPath windows-exe.zip
+        shell: powershell
       
       - name: Upload Windows executable
         uses: actions/upload-artifact@v4
