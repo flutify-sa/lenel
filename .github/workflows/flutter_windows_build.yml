@@ -22,16 +22,23 @@ jobs:
           git --version
         shell: powershell
       
-      - name: Set up Flutter manually
-        run: |
-          # Use the now-available git command
-          git clone https://github.com/flutter/flutter.git -b stable --depth 1
-          # Add flutter to PATH for this job
-          echo "${{ github.workspace }}\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          # Verify Flutter installation
-          .\flutter\bin\flutter doctor -v
-          .\flutter\bin\flutter precache --windows
-        shell: powershell
+    - name: Set up Flutter manually
+  run: |
+    # Clone Flutter with full history of the stable branch
+    git clone https://github.com/flutter/flutter.git -b stable
+    
+    # Configure Git in the Flutter repo
+    cd flutter
+    git config --global --add safe.directory ${{ github.workspace }}\flutter
+    
+    # Add Flutter to PATH
+    echo "${{ github.workspace }}\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    
+    # Verify Flutter installation and precache Windows files
+    cd ..
+    .\flutter\bin\flutter doctor -v
+    .\flutter\bin\flutter precache --windows
+  shell: powershell
       
       - name: Install dependencies
         run: flutter pub get
