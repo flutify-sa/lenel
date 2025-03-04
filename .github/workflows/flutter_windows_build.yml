@@ -16,25 +16,16 @@ jobs:
       - name: Install Git
         run: |
           choco install git -y
-          # Update PATH for this session
-          $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
-          # Verify Git is available
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User ")
           git --version
         shell: powershell
       
       - name: Set up Flutter manually
         run: |
-          # Clone Flutter with full history of the stable branch
           git clone https://github.com/flutter/flutter.git -b stable
-          
-          # Configure Git in the Flutter repo
           cd flutter
           git config --global --add safe.directory ${{ github.workspace }}\flutter
-          
-          # Add Flutter to PATH
           echo "${{ github.workspace }}\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          
-          # Verify Flutter installation and precache Windows files
           cd ..
           .\flutter\bin\flutter doctor -v
           .\flutter\bin\flutter precache --windows
@@ -46,6 +37,10 @@ jobs:
       
       - name: Build Windows executable
         run: flutter build windows --release
+        shell: powershell
+      
+      - name: List build output
+        run: dir build\windows\runner\Release
         shell: powershell
       
       - name: Package the executable with dependencies
@@ -65,6 +60,10 @@ jobs:
       - name: Zip the package
         run: |
           Compress-Archive -Path release-package\* -DestinationPath windows-exe.zip
+        shell: powershell
+      
+      - name: List ZIP contents
+        run: Expand-Archive -Path windows-exe.zip -DestinationPath temp-extract; dir temp-extract
         shell: powershell
       
       - name: Upload Windows executable
