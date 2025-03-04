@@ -1,4 +1,5 @@
 name: Build Windows Executable
+
 on:
   push:
     branches:
@@ -6,20 +7,22 @@ on:
   pull_request:
     branches:
       - main
+
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
-      
+
       - name: Install Git
         run: |
           choco install git -y
-          $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User  ")
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
           git --version
         shell: powershell
-      
+
       - name: Set up Flutter manually
         run: |
           git clone https://github.com/flutter/flutter.git -b stable
@@ -30,31 +33,39 @@ jobs:
           .\flutter\bin\flutter doctor -v
           .\flutter\bin\flutter precache --windows
         shell: powershell
-      
+
+      - name: Enable Windows Support
+        run: |
+          flutter config --enable-windows-desktop
+          flutter doctor -v
+        shell: powershell
+
       - name: Install dependencies
         run: flutter pub get
         shell: powershell
-      
+
       - name: Verify Flutter installation
         run: .\flutter\bin\flutter doctor -v
         shell: powershell
-      
+
       - name: Build Windows executable
         run: flutter build windows --release
         shell: powershell
-      
-      - name: List build directory
-        run: dir build\windows\runner
+
+      - name: Verify Windows Build Output
+        run: |
+          if (Test-Path build/windows/x64/runner/Release) { 
+            dir build/windows/x64/runner/Release 
+          } else { 
+            echo "Runner folder not found!" 
+            exit 1
+          }
         shell: powershell
-      
-      - name: List Release directory
-        run: dir build\windows\runner\Release
-        shell: powershell
-      
+
       - name: Package the executable with dependencies
         run: |
           mkdir release-package
-          xcopy build\windows\runner\Release\* release-package /E /H /C /I
+          xcopy build\windows\x64\runner\Release\* release-package /E /H /C /I
           if (Test-Path "flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll") {
             echo "Copying flutter_windows.dll from windows-x64..."
             xcopy flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll release-package /Y
@@ -64,16 +75,16 @@ jobs:
           }
           dir release-package
         shell: powershell
-      
+
       - name: Zip the package
         run: |
           Compress-Archive -Path release-package\* -DestinationPath windows-exe.zip
         shell: powershell
-      
+
       - name: List ZIP contents
         run: Expand-Archive -Path windows-exe.zip -DestinationPath temp-extract; dir temp-extract
         shell: powershell
-      
+
       - name: Upload Windows executable
         uses: actions/upload-artifact@v4
         with:
