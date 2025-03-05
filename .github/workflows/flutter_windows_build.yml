@@ -19,7 +19,7 @@ jobs:
       - name: Install Git
         run: |
           choco install git -y
-          $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User ")
           git --version
         shell: powershell
 
@@ -62,6 +62,10 @@ jobs:
           }
         shell: powershell
 
+      - name: List Build Output
+        run: dir build/windows/x64/runner/Release
+        shell: powershell
+
       - name: Package the executable with dependencies
         run: |
           mkdir release-package
@@ -73,6 +77,8 @@ jobs:
             echo "ERROR: flutter_windows.dll not found"
             exit 1
           }
+          # Copy all other DLLs from the build output
+          xcopy build\windows\x64\runner\Release\*.dll release-package /Y
           dir release-package
         shell: powershell
 
