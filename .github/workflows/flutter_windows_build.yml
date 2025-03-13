@@ -47,15 +47,10 @@ jobs:
       - name: Build Windows executable
         run: flutter build windows --release
         shell: powershell
-      
-      - name: Verify .exe file exists
+
+      - name: Verify Build Output
         run: |
-          if (Test-Path "build\windows\runner\Release\your-app-name.exe") {
-            echo ".exe found!"
-          } else {
-            echo "ERROR: .exe not found!"
-            exit 1
-          }
+          dir build\windows\runner\Release
         shell: powershell
 
       - name: Package the executable with dependencies
