@@ -44,13 +44,20 @@ jobs:
         run: flutter pub get
         shell: powershell
       
-      - name: Build Windows executable
-        run: flutter build windows --release
+      - name: Run Flutter Build and Verify Output
+        run: |
+          flutter build windows --release
+          dir build\windows\runner
         shell: powershell
 
-      - name: Verify Build Output
+      - name: Verify .exe file after build
         run: |
-          dir build\windows\runner\Release
+          if (Test-Path "build\windows\runner\Release\your-app-name.exe") {
+            echo ".exe found!"
+          } else {
+            echo "ERROR: .exe not found!"
+            exit 1
+          }
         shell: powershell
 
       - name: Package the executable with dependencies
@@ -64,11 +71,6 @@ jobs:
             echo "ERROR: flutter_windows.dll not found"
             exit 1
           }
-          dir release-package
-        shell: powershell
-
-      - name: Check contents of release-package
-        run: |
           dir release-package
         shell: powershell
 
