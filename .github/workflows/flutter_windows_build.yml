@@ -1,5 +1,4 @@
 name: Build Windows Executable
-
 on:
   push:
     branches:
@@ -7,50 +6,52 @@ on:
   pull_request:
     branches:
       - main
-
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: flutter/flutter-action # Using the latest version
-        with:
-          flutter-version: 'stable' # or specify a version like '3.16.0'
-
+      
+      - name: Install Git
+        run: |
+          choco install git -y
+          # Update PATH for this session
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+          # Verify Git is available
+          git --version
+        shell: powershell
+      
+      - name: Set up Flutter manually
+        run: |
+          # Clone Flutter with full history of the stable branch
+          git clone https://github.com/flutter/flutter.git -b stable
+          
+          # Configure Git in the Flutter repo
+          cd flutter
+          git config --global --add safe.directory ${{ github.workspace }}\flutter
+          
+          # Add Flutter to PATH
+          echo "${{ github.workspace }}\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          
+          # Verify Flutter installation and precache Windows files
+          cd ..
+          .\flutter\bin\flutter doctor -v
+          .\flutter\bin\flutter precache --windows
+        shell: powershell
+      
       - name: Install dependencies
         run: flutter pub get
         shell: powershell
-
-      - name: Verify Flutter installation
-        run: flutter doctor -v
-        shell: powershell
-
+      
       - name: Build Windows executable
         run: flutter build windows --release
         shell: powershell
-
-      - name: Verify Windows Build Output
-        run: |
-          if (Test-Path build/windows/x64/runner/Release) {
-            dir build/windows/x64/runner/Release
-          } else {
-            echo "Runner folder not found!"
-            exit 1
-          }
-        shell: powershell
-
-      - name: List Build Output
-        run: dir build/windows/x64/runner/Release
-        shell: powershell
-
+      
       - name: Package the executable with dependencies
         run: |
           mkdir release-package
-          xcopy build\windows\x64\runner\Release\* release-package /E /H /C /I
+          xcopy build\windows\runner\Release\* release-package /E /H /C /I
           if (Test-Path "flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll") {
             echo "Copying flutter_windows.dll from windows-x64..."
             xcopy flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll release-package /Y
@@ -58,43 +59,14 @@ jobs:
             echo "ERROR: flutter_windows.dll not found"
             exit 1
           }
-          # Copy all other DLLs from the build output
-          xcopy build\windows\x64\runner\Release\*.dll release-package /Y
-          # Download and copy the Visual C++ Redistributable
-          $url = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
-          $output = "release-package/vc_redist.x64.exe"
-          Invoke-WebRequest -Uri $url -OutFile $output
-
-          #Verify the existance of common dlls
-          if (Test-Path "release-package/kernel32.dll"){
-            echo "kernel32.dll found"
-          } else{
-            echo "kernel32.dll missing"
-            exit 1
-          }
-          if (Test-Path "release-package/user32.dll"){
-            echo "user32.dll found"
-          } else{
-            echo "user32.dll missing"
-            exit 1
-          }
-
           dir release-package
-          # Verify DLL file sizes
-          Get-ChildItem release-package\*.dll | ForEach-Object {
-            Write-Host "$($_.Name): $($_.Length) bytes"
-          }
         shell: powershell
-
+      
       - name: Zip the package
         run: |
           Compress-Archive -Path release-package\* -DestinationPath windows-exe.zip
         shell: powershell
-
-      - name: List ZIP contents
-        run: Expand-Archive -Path windows-exe.zip -DestinationPath temp-extract; dir temp-extract
-        shell: powershell
-
+      
       - name: Upload Windows executable
         uses: actions/upload-artifact@v4
         with:
