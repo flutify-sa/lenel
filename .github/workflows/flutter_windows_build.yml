@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Flutter
-        uses: flutter/flutter-action@
+        uses: flutter/flutter-action # Using the latest version
         with:
           flutter-version: 'stable' # or specify a version like '3.16.0'
 
