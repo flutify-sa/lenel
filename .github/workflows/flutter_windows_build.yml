@@ -48,6 +48,16 @@ jobs:
         run: flutter build windows --release
         shell: powershell
       
+      - name: Verify .exe file exists
+        run: |
+          if (Test-Path "build\windows\runner\Release\your-app-name.exe") {
+            echo ".exe found!"
+          } else {
+            echo "ERROR: .exe not found!"
+            exit 1
+          }
+        shell: powershell
+
       - name: Package the executable with dependencies
         run: |
           mkdir release-package
@@ -61,10 +71,15 @@ jobs:
           }
           dir release-package
         shell: powershell
-      
+
+      - name: Check contents of release-package
+        run: |
+          dir release-package
+        shell: powershell
+
       - name: Zip the package
         run: |
-          Compress-Archive -Path release-package\* -DestinationPath windows-exe.zip
+          Compress-Archive -Path release-package\* -DestinationPath windows-exe.zip -Recurse
         shell: powershell
       
       - name: Upload Windows executable
