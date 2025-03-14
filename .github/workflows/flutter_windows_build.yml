@@ -68,7 +68,7 @@ jobs:
         shell: powershell
 
       - name: Zip the package
-        run: Compress-Archive -Path release-package\* -DestinationPath windows-exe.zip -Recurse
+        run: Compress-Archive -Path release-package\* -DestinationPath windows-exe.zip
         shell: powershell
       
       - name: Upload Windows executable
