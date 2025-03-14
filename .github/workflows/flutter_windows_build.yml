@@ -47,12 +47,12 @@ jobs:
       - name: Run Flutter Build and Verify Output
         run: |
           flutter build windows --release
-          dir build\windows\runner
+          dir build\windows\x64\runner\Release
         shell: powershell
 
       - name: Verify .exe file after build
         run: |
-          if (Test-Path "build\windows\runner\Release\your-app-name.exe") {
+          if (Test-Path "build\windows\x64\runner\Release\your-app-name.exe") {
             echo ".exe found!"
           } else {
             echo "ERROR: .exe not found!"
@@ -63,7 +63,7 @@ jobs:
       - name: Package the executable with dependencies
         run: |
           mkdir release-package
-          xcopy build\windows\runner\Release\* release-package /E /H /C /I
+          xcopy build\windows\x64\runner\Release\* release-package /E /H /C /I
           if (Test-Path "flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll") {
             echo "Copying flutter_windows.dll from windows-x64..."
             xcopy flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll release-package /Y
