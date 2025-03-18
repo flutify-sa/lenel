@@ -73,7 +73,7 @@ jobs:
             echo "❌ ERROR: Failed to copy MSVC runtime DLLs"
             exit 1
           }
-          echo "📦 Contents of release-package:"
+          echo "Contents of release-package:"
           Get-ChildItem -Path release-package -Recurse
         shell: powershell
 
