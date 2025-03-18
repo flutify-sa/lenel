@@ -65,6 +65,21 @@ jobs:
             echo "❌ ERROR: flutter_windows.dll not found"
             exit 1
           }
+          echo "✅ Copying MSVC runtime DLLs..."
+          xcopy "C:\Windows\System32\msvcp140.dll" release-package /Y
+          xcopy "C:\Windows\System32\vcruntime140.dll" release-package /Y
+          xcopy "C:\Windows\System32\vcruntime140_1.dll" release-package /Y
+          if (!(Test-Path "release-package\msvcp140.dll") -or !(Test-Path "release-package\vcruntime140.dll") -or !(Test-Path "release-package\vcruntime140_1.dll")) {
+            echo "❌ ERROR: Failed to copy MSVC runtime DLLs"
+            exit 1
+          }
+          echo "📦 Contents of release-package:"
+          Get-ChildItem -Path release-package -Recurse
+        shell: powershell
+
+      - name: Add README to package
+        run: |
+          echo "To run the app:`n1. Extract this zip file to a folder.`n2. Double-click sincotdashboard.exe to launch.`n3. Keep all files in the same folder." > release-package\README.txt
         shell: powershell
 
       - name: Zip the package
