@@ -1,4 +1,5 @@
 name: Build Windows Executable
+
 on:
   push:
     branches:
@@ -6,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+
 jobs:
   build:
     runs-on: windows-latest
@@ -13,22 +15,11 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v4
       
-      - name: Install Git
-        run: |
-          choco install git -y
-          $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
-          git --version
-        shell: powershell
-      
-      - name: Set up Flutter manually
+      - name: Install Flutter
         run: |
           git clone https://github.com/flutter/flutter.git -b stable
-          cd flutter
-          git config --global --add safe.directory ${{ github.workspace }}\flutter
           echo "${{ github.workspace }}\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          cd ..
           .\flutter\bin\flutter doctor -v
-          .\flutter\bin\flutter precache --windows
         shell: powershell
       
       - name: Install dependencies
@@ -39,40 +30,28 @@ jobs:
         run: flutter build windows --release
         shell: powershell
 
-      - name: Debug - List build output
-        run: Get-ChildItem -Path build\windows\x64\runner\Release
-        shell: powershell
-
-      - name: Verify sincotdashboard.exe file exists
-        run: |
-          if (Test-Path "build\windows\x64\runner\Release\sincotdashboard.exe") {
-            echo "✅ sincotdashboard.exe found!"
-          } else {
-            echo "❌ ERROR: sincotdashboard.exe not found! Check build paths."
-            exit 1
-          }
-        shell: powershell
-
       - name: Package the executable with dependencies
         run: |
           mkdir release-package
           xcopy build\windows\x64\runner\Release\* release-package /E /H /C /I
+          
+          # Copy additional DLLs if needed
           $flutterDllPath = "flutter\bin\cache\artifacts\engine\windows-x64\flutter_windows.dll"
           if (Test-Path $flutterDllPath) {
-            echo "✅ Copying flutter_windows.dll..."
             xcopy $flutterDllPath release-package /Y
-          } else {
-            echo "❌ ERROR: flutter_windows.dll not found"
-            exit 1
           }
-          echo "✅ Copying MSVC runtime DLLs..."
+          
+          # Copy MSVC runtime DLLs
           xcopy "C:\Windows\System32\msvcp140.dll" release-package /Y
           xcopy "C:\Windows\System32\vcruntime140.dll" release-package /Y
           xcopy "C:\Windows\System32\vcruntime140_1.dll" release-package /Y
+
+          # Check if all necessary DLLs are copied
           if (!(Test-Path "release-package\msvcp140.dll") -or !(Test-Path "release-package\vcruntime140.dll") -or !(Test-Path "release-package\vcruntime140_1.dll")) {
             echo "❌ ERROR: Failed to copy MSVC runtime DLLs"
             exit 1
           }
+          
           echo "Contents of release-package:"
           Get-ChildItem -Path release-package -Recurse
         shell: powershell
